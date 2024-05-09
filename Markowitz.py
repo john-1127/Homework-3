@@ -66,7 +66,12 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
-
+        weight = 1 / len(assets) if len(assets) > 0 else 0  # Ensure there's no division by zero
+        for asset in assets:
+            self.portfolio_weights[asset] = weight
+        
+        self.portfolio_weights[self.exclude] = 0
+ 
         """
         TODO: Complete Task 1 Above
         """
@@ -117,6 +122,17 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
+        # print("origin:\n", df[assets])
+        volatilities = df[assets].rolling(window=self.lookback).std()
+        # print("Calculated volatilities:\n", volatilities)
+
+        inverse_volatility = 1 / volatilities
+        # print("inverse_volatility:\n", inverse_volatility)
+        sum_inverse_volatilities = inverse_volatility.sum(axis=1)
+        # print(sum_inverse_volatilities)
+        self.portfolio_weights = inverse_volatility.divide(sum_inverse_volatilities, axis=0)        
+
+        self.portfolio_weights[self.exclude] = 0
 
         """
         TODO: Complete Task 2 Above
@@ -190,10 +206,14 @@ class MeanVariancePortfolio:
                 TODO: Complete Task 3 Below
                 """
 
-                # Sample Code: Initialize Decision w and the Objective
-                # NOTE: You can modify the following code
-                w = model.addMVar(n, name="w", ub=1)
-                model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
+
+                w = model.addVars(n, lb=0, name="w")
+
+                portfolio_return = gp.quicksum(w[i] * mu[i] for i in range(n))
+                portfolio_risk = gp.quicksum(w[i] * w[j] * Sigma[i][j] for i in range(n) for j in range(n))
+                model.setObjective(portfolio_return - gamma / 2 * portfolio_risk, gp.GRB.MAXIMIZE)
+
+                model.addConstr(w.sum() == 1, "budget")
 
                 """
                 TODO: Complete Task 3 Below
