@@ -99,7 +99,6 @@ class EqualWeightPortfolio:
 
         return self.portfolio_weights, self.portfolio_returns
 
-
 """
 Problem 2:
 
@@ -122,17 +121,14 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
-        # print("origin:\n", df[assets])
-        volatilities = df[assets].rolling(window=self.lookback).std()
-        # print("Calculated volatilities:\n", volatilities)
+        
+        rolling_vol = df_returns[assets].rolling(window=self.lookback).std()
 
-        inverse_volatility = 1 / volatilities
-        # print("inverse_volatility:\n", inverse_volatility)
-        sum_inverse_volatilities = inverse_volatility.sum(axis=1)
-        # print(sum_inverse_volatilities)
-        self.portfolio_weights = inverse_volatility.divide(sum_inverse_volatilities, axis=0)        
+        inv_vol = 1 / rolling_vol
 
-        self.portfolio_weights[self.exclude] = 0
+        weights = inv_vol.div(inv_vol.sum(axis=1), axis=0)
+
+        self.portfolio_weights[assets] = weights
 
         """
         TODO: Complete Task 2 Above
